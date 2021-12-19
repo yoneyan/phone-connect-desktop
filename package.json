@@ -1,0 +1,17 @@
+{
+  "name": "phone-connect-desktop",
+  "version": "1.0.0",
+  "main": "main.js",
+  "repository": "git@github.com:yoneyan/phone-connect-desktop.git",
+  "author": "yoneyan <git@yoneyan.net>",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^16.0.5"
+  },
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "crypto": "^1.0.1"
+  }
+}
