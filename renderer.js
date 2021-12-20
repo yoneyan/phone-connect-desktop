@@ -233,6 +233,7 @@ async function tethering_off() {
     let dec = decipher.update(response, 'base64', 'utf8')
     dec += decipher.final('utf8')
     console.log(dec)
+    device.gatt.disconnect()
     return 0
 }
 
