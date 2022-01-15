@@ -3,30 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-    <title>Web Bluetooth API</title>
+    <title>Phone Connect Desktop</title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
 </head>
 <body>
-<h1>Web Bluetooth API</h1>
+<h1>Phone Connect Desktop</h1>
 
-<p>device_name</p>
-<input type="text" id="device_name" name="device_name" required minlength="4" maxlength="100" size="30">
+<div class="container">
+    <div class="p-3 border bg-light">
+        <div class="row g-2">
+            <div class="col-10">
+                <label>デバイス名</label>
+                <input type="text" id="device_name" name="device_name" class="form-control" required minlength="4"
+                       maxlength="100" size="30" value="Pixel4a (5G)">
+            </div>
+            <div class="col-8">
+                <label>共通鍵</label>
+                <input type="text" id="common_key" name="common_key" class="form-control" required minlength="4"
+                       maxlength="100" value="share_key"
+                       size="30">
+            </div>
+            <div class="col-8">
+                <label>iv鍵</label>
+                <input type="text" id="iv_key" name="iv_key" class="form-control" required minlength="4" maxlength="100"
+                       size="30" value="iv_key">
+            </div>
+            <div class='btn-toolbar' role="toolbar">
+                <div>
+                    <button id="tethering_on" class="btn btn-primary">Tethering ON</button>
+                    <button id="tethering_off" class="btn btn-danger">Tethering OFF</button>
+                    <button id="battery_level" class="btn btn-dark">Battery Level</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<br/>
+<div class="container">
+    <div class="p-3 border bg-light">
+        <h4>Currently selected bluetooth device</h4>
+        <p>ID: <strong id="device-id"></strong></p>
+        <p>Name: <strong id="device-name"></strong></p>
+        <div id="log"></div>
+    </div>
+</div>
+<br/>
+<div class="container">
+    <div class="p-3 border bg-light">
+        <h3>Test</h3>
+        <button id="clickme" class="btn btn-secondary">Test Bluetooth</button>
+        <button id="clickme1" class="btn btn-secondary">Test1 Bluetooth</button>
+    </div>
+</div>
 <br/>
 <br/>
-<button id="tethering_on">Tethering ON</button>
-<button id="tethering_off">Tethering OFF</button>
-<br/>
-<button id="battery_level">Battery Level</button>
-<br/>
-<br/>
-<br/>
-
-<button id="clickme">Test Bluetooth</button>
-<button id="clickme1">Test1 Bluetooth</button>
-
-<h4>Currently selected bluetooth device</h4>
-<p>ID: <strong id="device-id"></strong></p>
-<p>Name: <strong id="device-name"></strong></p>
-
 <script src="./renderer.js"></script>
 </body>
 </html>

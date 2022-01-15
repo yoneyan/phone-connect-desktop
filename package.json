@@ -12,6 +12,7 @@
     "start": "electron ."
   },
   "dependencies": {
+    "bootstrap": "^5.1.3",
     "crypto": "^1.0.1"
   }
 }
