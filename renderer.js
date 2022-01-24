@@ -56,14 +56,6 @@ function paddingIV(iv) {
     return iv
 }
 
-function bufferFromString(str) {
-    // If fill is undefined, the Buffer will be zero filled;
-    // set size of string length
-    var buffer = Buffer.alloc(str.length)
-    buffer.write(str)
-    return buffer
-}
-
 const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
 
 const ServiceUUID = "a9d158bb-9007-4fe3-b5d2-d3696a3eb067"
@@ -96,150 +88,10 @@ async function init() {
     return device
 }
 
-async function init_auth() {
-    console.log("test")
-    const client_random = random(20)
-    const pre_shared_hash_key = await sha256Hash(shareKey)
-
-    console.log(pre_shared_hash_key)
-
-    await phase0_auth(client_random)
-    console.log("phase0 OK")
-    await sleep(1000)
-    const server_random = await phase1_auth()
-    await console.log(1)
-    await sleep(1000)
-    await console.log(2)
-    await phase2_auth(server_random, client_random, pre_shared_hash_key)
-    // await sleep(500)
-    // const access_token = await phase3_auth(server_random, client_random, pre_shared_hash_key)
-    // await sleep(500)
-    // await tethering_on_process(access_token)
-}
-
-async function phase0_auth(client_random) {
-    // init process
-    const device = await init()
-    const server = await device.gatt.connect()
-    const service = await server.getPrimaryService(ServiceUUID)
-    const characteristic = await service.getCharacteristic(CharacteristicLIFFWriteUUID)
-
-    // phase0
-    const phase0_send = "!" + client_random
-    console.log("phase0 send data: " + phase0_send)
-    characteristic.writeValue(encoder.encode(phase0_send))
-    console.log("phase0 OK")
-    await server.disconnect()
-}
-
-async function phase1_auth() {
-    // init process
-    const device = await init()
-    const server = await device.gatt.connect()
-    const service = await server.getPrimaryService(ServiceUUID)
-    const characteristic = await service.getCharacteristic(CharacteristicLIFFReadUUID)
-
-    // phase1
-    const phase1_raw = await characteristic.readValue()
-    let server_mix_hash = "";
-    let server_random = "";
-    console.log(phase1_raw)
-    const phase1_str = decoder.decode(phase1_raw)
-    if (phase1_str[0] === "!") {
-        const phase1_array = phase1_str.substr(1).split(",")
-        server_mix_hash = phase1_array[0]
-        server_random = phase1_array[1]
-        await server.disconnect()
-    } else {
-        console.log("phase1 error")
-        await server.disconnect()
-
-        return
-    }
-    console.log("phase1 OK")
-
-    return server_random
-}
-
-async function phase2_auth(server_random, client_random, pre_shared_hash_key) {
-    // init process
-    const device = await init()
-    const server = await device.gatt.connect()
-    const service = await server.getPrimaryService(ServiceUUID)
-    const characteristic = await service.getCharacteristic(CharacteristicLIFFWriteUUID)
-
-    // phase2
-    const phase2_mix_hash = await sha256Hash(server_random + client_random + pre_shared_hash_key)
-    console.log("phase2_mix_hash: " + phase2_mix_hash)
-    const phase2_send = "@" + phase2_mix_hash
-    characteristic.writeValue(encoder.encode(phase2_send))
-}
-
-async function phase3_auth(server_random, client_random, pre_shared_hash_key) {
-    // init process
-    const device = await init()
-    const server = await device.gatt.connect()
-    const service = await server.getPrimaryService(ServiceUUID)
-    const characteristic = await service.getCharacteristic(CharacteristicUUID)
-
-    // phase3
-    const phase3_mix_hash = await sha256Hash(server_random + client_random)
-    console.log("phase3_mix_hash: " + phase3_mix_hash)
-    const access_token = await sha256Hash(phase3_mix_hash + pre_shared_hash_key)
-    console.log("AccessToken: " + access_token)
-    console.log("phase3 OK")
-    return access_token
-}
-
-async function result_process(access_token) {
-    // init process
-    const device = await init()
-    const server = await device.gatt.connect()
-    const service = await server.getPrimaryService(ServiceUUID)
-    const characteristic = await service.getCharacteristic(CharacteristicUUID)
-
-    // result
-    const response_raw = await characteristic.readValue()
-    const response = decoder.decode(response_raw)
-
-    const key = Buffer.from(paddingKey(shareKey))
-    const iv_tmp = Buffer.from(paddingIV(iv))
-    const decipher = crypto_node.createDecipheriv("aes-256-cbc", key, iv_tmp)
-    let dec = decipher.update(response, 'base64', 'utf8')
-    dec += decipher.final('utf8')
-    console.log(dec)
-    return dec
-}
-
-async function tethering_on_process(access_token) {
-    // init process
-    const device = await init()
-    const server = await device.gatt.connect()
-    const service = await server.getPrimaryService(ServiceUUID)
-    const characteristic = await service.getCharacteristic(CharacteristicUUID)
-
-    // tethering_on process
-    const now_date = new Date();
-    const send_data = now_date.toISOString() + "," + access_token + "," + "tethering_on"
-
-    const key = Buffer.from(paddingKey(shareKey))
-    const iv_tmp = Buffer.from(paddingIV(iv))
-    const ciper = await crypto_node.createCipheriv("aes-256-cbc", key, iv_tmp)
-    let enc_text = ciper.update(send_data, 'utf-8', 'base64')
-    enc_text += ciper.final('base64')
-    // delayしないと、gattの送信に失敗する
-    await sleep(500);
-    const tethering_on_send = "#" + enc_text
-    console.log(tethering_on_send)
-    characteristic.writeValue(encoder.encode(tethering_on_send))
-    console.log("SEND.....")
-    return true
-}
-
-
 async function tethering_on() {
     // init log
     let log_area = document.getElementById("log");
+    log_area.innerHTML = '';
     log_area.insertAdjacentHTML("beforebegin", "loading... <br>");
     // init process
     const device = await init()
@@ -326,9 +178,14 @@ async function tethering_on() {
 
     const response = decoder.decode(response_raw)
     const decipher = crypto_node.createDecipheriv("aes-256-cbc", key, iv_tmp)
-    let dec = decipher.update(response, 'base64', 'utf8')
-    dec += decipher.final('utf8')
-    console.log(dec)
+    try {
+        let dec = decipher.update(response, 'base64', 'utf8')
+        dec += decipher.final('utf8')
+        console.log(dec)
+        log_area.insertAdjacentHTML("beforebegin", dec + "<br>");
+    } catch (e) {
+        log_area.insertAdjacentHTML("beforebegin", "<font color=\"red\">認証エラー [" + e + "] </font>");
+    }
 
     server.disconnect()
     return 0
@@ -337,6 +194,7 @@ async function tethering_on() {
 async function tethering_off() {
     // init log
     let log_area = document.getElementById("log");
+    log_area.innerHTML = '';
     log_area.insertAdjacentHTML("beforebegin", "loading... <br>");
     // init process
     const device = await init()
@@ -423,11 +281,14 @@ async function tethering_off() {
     const response = decoder.decode(response_raw)
 
     const decipher = crypto_node.createDecipheriv("aes-256-cbc", key, iv_tmp)
-    let dec = decipher.update(response, 'base64', 'utf8')
-    dec += decipher.final('utf8')
-
-    // log
-    log_area.insertAdjacentHTML("beforebegin", dec + "<br>");
+    try {
+        let dec = decipher.update(response, 'base64', 'utf8')
+        dec += decipher.final('utf8')
+        console.log(dec)
+        log_area.insertAdjacentHTML("beforebegin", dec + "<br>");
+    } catch (e) {
+        log_area.insertAdjacentHTML("beforebegin", "<font color=\"red\">認証エラー [" + e + "] </font>");
+    }
 
     server.disconnect()
     return 0

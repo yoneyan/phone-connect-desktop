@@ -20,7 +20,8 @@ function createWindow() {
             callback(deviceList[0].deviceId)
         }
     })
-    mainWindow.webContents.openDevTools();
+    // open dev tools
+    // mainWindow.webContents.openDevTools();
 
     mainWindow.loadFile('index.html')
 }
