@@ -224,7 +224,7 @@ async function tethering_off() {
     log_area.insertAdjacentHTML("beforebegin", "phase0 OK<br>");
 
     // phase1
-    await sleep(1000);
+    // await sleep(1000);
     const phase1_raw = await characteristic_read.readValue()
     let server_mix_hash = "";
     let server_random = "";
